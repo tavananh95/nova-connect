@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333"
+import { requireApiBaseUrl } from "@/lib/api-base-url"
+
+const API_BASE_URL = requireApiBaseUrl()
 
 // Fonction utilitaire pour les appels API
 async function apiCall(endpoint: string, options: RequestInit = {}) {

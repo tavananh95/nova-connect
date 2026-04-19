@@ -21,6 +21,7 @@ export function Feed() {
   const { posts, isLoading, error } = usePosts()
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null)
   const [animatedLikes, setAnimatedLikes] = useState<Record<number, boolean>>({})
+  const [imageRefreshAttempted, setImageRefreshAttempted] = useState<Record<number, boolean>>({})
 
   const token = session?.user.accessToken
 
@@ -75,13 +76,18 @@ export function Feed() {
       if (post.image) {
         // Télécharger l'image
         const response = await fetch(post.image)
+        if (!response.ok) {
+          await mutate(`${API_BASE}/api/v1/posts`)
+          throw new Error(`Image download failed with status ${response.status}`)
+        }
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement("a")
         link.href = url
 
         // Extraire l'extension du fichier ou utiliser jpg par défaut
-        const extension = post.image.split(".").pop()?.toLowerCase() || "jpg"
+        const path = new URL(post.image).pathname
+        const extension = path.split(".").pop()?.toLowerCase() || "jpg"
         const fileName = `post-${post.id}-image.${extension}`
 
         link.download = fileName
@@ -110,6 +116,12 @@ ${typeof post.content === "string" ? post.content : JSON.stringify(post.content,
       console.error("Erreur lors du téléchargement:", error)
       alert("Erreur lors du téléchargement du fichier")
     }
+  }
+
+  const handlePostImageError = async (postId: number) => {
+    if (imageRefreshAttempted[postId]) return
+    setImageRefreshAttempted((prev) => ({ ...prev, [postId]: true }))
+    await mutate(`${API_BASE}/api/v1/posts`)
   }
 
   const formatDate = (dateString: string) => {
@@ -215,6 +227,7 @@ ${typeof post.content === "string" ? post.content : JSON.stringify(post.content,
                     <AvatarImage
                       src={post.user?.avatar || post.user?.firstName }
                       alt={post.user?.firstName || "Avatar"}
+                      onError={() => handlePostImageError(post.id)}
                     />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold text-lg">
                       {(post.user?.firstName || "??")
@@ -271,6 +284,7 @@ ${typeof post.content === "string" ? post.content : JSON.stringify(post.content,
                     width={600}
                     height={300}
                     className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700"
+                    onError={() => handlePostImageError(post.id)}
                   />
                 </div>
               )}

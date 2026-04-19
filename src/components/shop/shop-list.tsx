@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import { useState } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,6 +19,7 @@ interface ShopListProps {
   totalPages: number
   onPageChange: (page: number) => void
   onActionSuccess: () => void
+  onImageExpired: () => void
 }
 
 export default function ShopList({
@@ -28,11 +30,19 @@ export default function ShopList({
   totalPages,
   onPageChange,
   onActionSuccess,
+  onImageExpired,
 }: ShopListProps) {
   const { data: session } = useSession()
   const user = session?.user
 
   const { handlePurchase } = useShopActions({ onActionSuccess })
+  const [imageRefreshAttempted, setImageRefreshAttempted] = useState<Record<number, boolean>>({})
+
+  const handleImageError = (itemId: number) => {
+    if (imageRefreshAttempted[itemId]) return
+    setImageRefreshAttempted((prev) => ({ ...prev, [itemId]: true }))
+    onImageExpired()
+  }
 
   if (isLoading) {
     return (
@@ -95,6 +105,7 @@ export default function ShopList({
                   layout="fill"
                   objectFit="cover"
                   className="transition-transform duration-500 hover:scale-105"
+                  onError={() => handleImageError(item.id)}
                 />
                 {isPurchased && (
                   <Badge

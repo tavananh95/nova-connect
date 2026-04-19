@@ -35,6 +35,11 @@ export default function ShopMain() {
     mutate() // Also trigger SWR revalidation
   }, [mutate])
 
+  const handleImageExpired = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1)
+    mutate()
+  }, [mutate])
+
   if (session.status === "loading") {
     return (
       <div className="flex items-center justify-center p-12">
@@ -107,6 +112,7 @@ export default function ShopMain() {
           totalPages={meta?.lastPage || 1}
           onPageChange={handlePageChange}
           onActionSuccess={handleActionSuccess}
+          onImageExpired={handleImageExpired}
         />
       </div>
     </div>

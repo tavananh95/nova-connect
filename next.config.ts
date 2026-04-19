@@ -25,6 +25,16 @@ const nextConfig = {
         hostname: "bucket-production-3fe3.up.railway.app",
         protocol: "https",
       },
+      {
+        protocol: "https",
+        hostname: "**.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**.on.aws",
+        pathname: "/**",
+      },
     ],
   },
 };
