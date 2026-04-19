@@ -41,6 +41,7 @@ export default function ChatInterface() {
   const [newMessage, setNewMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [avatarRefreshAttempted, setAvatarRefreshAttempted] = useState<Record<string, boolean>>({})
   const endRef = useRef<HTMLDivElement>(null)
   const socketRef = useRef<Socket | null>(null)
 
@@ -92,25 +93,34 @@ export default function ChatInterface() {
     }
   }
 
-  // 3) Charger l’historique (REST)
-  useEffect(() => {
+  const fetchConversation = async () => {
     if (!token || !otherUserId) return
-    axios
-      .get<any[]>(`${API}/api/v1/messages/conversation/${otherUserId}`, {
+    try {
+      const res = await axios.get<any[]>(`${API}/api/v1/messages/conversation/${otherUserId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        const normalized = res.data.map(normalize)
-        setMessages(normalized)
-      })
-      .catch((err) => {
-        if (axios.isAxiosError(err) && err.response?.status === 404) {
-          setMessages([])
-        } else {
-          console.error("GET conversation error:", err)
-        }
-      })
+      const normalized = res.data.map(normalize)
+      setMessages(normalized)
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        setMessages([])
+      } else {
+        console.error("GET conversation error:", err)
+      }
+    }
+  }
+
+  // 3) Charger l’historique (REST)
+  useEffect(() => {
+    fetchConversation()
   }, [API, token, otherUserId, partnerName])
+
+  const handleAvatarError = (senderId: string) => {
+    if (!senderId) return
+    if (avatarRefreshAttempted[senderId]) return
+    setAvatarRefreshAttempted((prev) => ({ ...prev, [senderId]: true }))
+    fetchConversation()
+  }
 
   // 4) Charger le nombre de non-lus
   useEffect(() => {
@@ -213,10 +223,10 @@ export default function ChatInterface() {
                 m.isOwn ? "flex-row-reverse" : "flex-row"
               }`}
             >
-              <Avatar className="h-8 w-8 flex-shrink-0">
-                {m.senderAvatar ? (
-                  <AvatarImage src={m.senderAvatar} />
-                ) : (
+                <Avatar className="h-8 w-8 flex-shrink-0">
+                  {m.senderAvatar ? (
+                    <AvatarImage src={m.senderAvatar} onError={() => handleAvatarError(m.senderId)} />
+                  ) : (
                   <AvatarFallback className="bg-gradient-to-r from-purple-400 to-blue-400 text-white text-xs">
                     {m.senderName.charAt(0)}
                   </AvatarFallback>

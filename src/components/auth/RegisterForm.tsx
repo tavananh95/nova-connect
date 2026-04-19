@@ -29,6 +29,7 @@ import axios from "axios";
 import Image from "next/image";
 import { logger } from "@/lib/logger";
 import { useRouter } from "next/navigation";
+import { requireApiBaseUrl, getMissingApiBaseUrlMessage } from "@/lib/api-base-url";
 
 const formSchema = z.object({
   username: z.string().min(3),
@@ -67,6 +68,16 @@ export function RegisterForm() {
     setIsSubmitting(true);
 
     try {
+      let apiBaseUrl: string;
+      try {
+        apiBaseUrl = requireApiBaseUrl();
+      } catch {
+        form.setError("email", {
+          message: getMissingApiBaseUrlMessage(),
+        });
+        return;
+      }
+
       const formData = new FormData();
       formData.append("username", values.username);
       formData.append("firstName", values.first_name); // camelCase requis par le backend
@@ -87,7 +98,7 @@ export function RegisterForm() {
       }
 
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/register`,
+        `${apiBaseUrl}/api/v1/auth/register`,
         formData
       );
       logger.info("Register success:", response.data);

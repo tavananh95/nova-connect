@@ -21,6 +21,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [subscribed, setSubscribed] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [imageRefreshAttempted, setImageRefreshAttempted] = useState(false)
 
   const fetchEvent = async () => {
     if (!user?.accessToken) return
@@ -101,6 +102,12 @@ export default function EventDetailPage() {
     fetchEvent()
   }, [user?.accessToken])
 
+  const handleEventImageError = () => {
+    if (imageRefreshAttempted) return
+    setImageRefreshAttempted(true)
+    fetchEvent()
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center">
@@ -155,6 +162,7 @@ export default function EventDetailPage() {
             src={event.image || "/placeholder.svg?height=400&width=800"}
             alt={event.title}
             className="w-full h-80 object-cover"
+            onError={handleEventImageError}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
           <div className="absolute bottom-6 left-6 right-6">
@@ -195,7 +203,10 @@ export default function EventDetailPage() {
                       >
                         <Avatar className="h-12 w-12 ring-2 ring-white shadow-sm">
                           {participant.avatar ? (
-                            <AvatarImage src={participant.avatar || "/placeholder-post.svg"} />
+                            <AvatarImage
+                              src={participant.avatar || "/placeholder-post.svg"}
+                              onError={handleEventImageError}
+                            />
                           ) : (
                             <AvatarFallback className="bg-gradient-to-br from-violet-500 to-pink-500 text-white font-semibold">
                               {participant.username ? participant.username[0].toUpperCase() : "?"}

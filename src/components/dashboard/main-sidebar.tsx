@@ -110,9 +110,7 @@ export function MainSidebar() {
         <div className="flex items-center gap-4 mb-6">
           <div className="relative">
             <Avatar className="h-14 w-14 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-              <AvatarImage
-                src={user?.avatar ||user?.email?.[0]?.toUpperCase()}
-              />
+              <AvatarImage src={user?.avatar || undefined} />
               <AvatarFallback className="text-lg font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600 border-2 border-white/20">
                 {user?.email?.[0]?.toUpperCase() || "U"}
               </AvatarFallback>

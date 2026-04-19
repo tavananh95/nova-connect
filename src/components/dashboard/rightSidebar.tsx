@@ -34,6 +34,7 @@ export default function ModernRightSidebar() {
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isLoading, setIsLoading] = useState(true)
+  const [avatarRefreshAttempted, setAvatarRefreshAttempted] = useState<Record<number, boolean>>({})
 
   // Charge TOUS les users (no-pagination)
   const fetchUsers = async () => {
@@ -61,6 +62,12 @@ export default function ModernRightSidebar() {
   useEffect(() => {
     fetchUsers()
   }, [user?.accessToken, user?.id])
+
+  const handleAvatarError = (userId: number) => {
+    if (avatarRefreshAttempted[userId]) return
+    setAvatarRefreshAttempted((prev) => ({ ...prev, [userId]: true }))
+    fetchUsers()
+  }
 
   const filteredUsers = users.filter((u) =>
     u.username.toLowerCase().includes(searchTerm.toLowerCase())
@@ -155,7 +162,7 @@ export default function ModernRightSidebar() {
                   <div className="relative">
                     <Avatar className="h-11 w-11 ring-2 ring-background shadow-md">
                       {u.avatar ? (
-                        <AvatarImage src={u.avatar} />
+                        <AvatarImage src={u.avatar} onError={() => handleAvatarError(u.id)} />
                       ) : (
                         <AvatarFallback className={`bg-gradient-to-br ${lvl.color} text-white font-semibold text-sm`}>
                           {u.username.charAt(0).toUpperCase()}

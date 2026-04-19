@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { mutatePosts, API_BASE } from "@/hooks/usePosts"
+import { mutatePosts } from "@/hooks/usePosts"
+import { getMissingApiBaseUrlMessage, requireApiBaseUrl } from "@/lib/api-base-url"
 
 export function CreatePostButton() {
   const { data: session } = useSession()
@@ -57,9 +58,10 @@ export function CreatePostButton() {
     formData.append("image", file)       
 
     try {
-      
+      const apiBaseUrl = requireApiBaseUrl()
+
       const { status, data } = await axios.post(
-        `${API_BASE}/api/v1/posts`,
+        `${apiBaseUrl}/api/v1/posts`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -76,6 +78,10 @@ export function CreatePostButton() {
         console.error("Publication inattendue :", status, data)
       }
     } catch (err: any) {
+      if (err instanceof Error && err.message === getMissingApiBaseUrlMessage()) {
+        console.error("Erreur configuration API:", err.message)
+        return
+      }
       console.error(
         "Erreur création post:",
         "status=", err.response?.status,

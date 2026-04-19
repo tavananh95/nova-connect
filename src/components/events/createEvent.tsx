@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Upload, X, Plus } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { requireApiBaseUrl, getMissingApiBaseUrlMessage } from "@/lib/api-base-url"
 
 interface CreateEventProps {
   onEventCreated: () => void
@@ -62,6 +63,7 @@ export default function CreateEvent({ onEventCreated, children }: CreateEventPro
   const createEvent = async () => {
     if (!user?.accessToken) return
     try {
+      const apiBaseUrl = requireApiBaseUrl()
       const formData = new FormData()
       formData.append("title", newEvent.title)
       formData.append("description", newEvent.description)
@@ -71,7 +73,7 @@ export default function CreateEvent({ onEventCreated, children }: CreateEventPro
       if (imageFile) formData.append("image", imageFile)
 
       const resp = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/events`,
+        `${apiBaseUrl}/api/v1/events`,
         formData,
         {
           headers: {
@@ -97,6 +99,14 @@ export default function CreateEvent({ onEventCreated, children }: CreateEventPro
       setIsOpen(false)
       onEventCreated()
     } catch (err: any) {
+      if (err instanceof Error && err.message === getMissingApiBaseUrlMessage()) {
+        toast({
+          title: "Erreur de configuration",
+          description: getMissingApiBaseUrlMessage(),
+          variant: "destructive",
+        })
+        return
+      }
       const msg =
         err?.response?.data?.errors?.[0]?.message || "Erreur inconnue"
       toast({ title: "Erreur", description: msg, variant: "destructive" })

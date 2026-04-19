@@ -20,6 +20,7 @@ export default function ModernEventList() {
   const [filteredEvents, setFilteredEvents] = useState<EventItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [imageRefreshAttempted, setImageRefreshAttempted] = useState<Record<string, boolean>>({})
 
   const fetchEvents = async () => {
     if (!user?.accessToken) return
@@ -73,6 +74,12 @@ export default function ModernEventList() {
   }
 
   const isEventCreator = (e: EventItem) => e.creator_id === user?.id || e.created_by === user?.id
+
+  const handleImageError = (eventId: string) => {
+    if (imageRefreshAttempted[eventId]) return
+    setImageRefreshAttempted((prev) => ({ ...prev, [eventId]: true }))
+    fetchEvents()
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/10 dark:from-background dark:to-muted/20">
@@ -153,6 +160,7 @@ export default function ModernEventList() {
                       src={event.image || "/placeholder.svg"}
                       alt={event.title}
                       className="w-full lg:w-64 h-40 object-cover rounded-2xl shadow-md group-hover:shadow-lg transition-shadow duration-300"
+                      onError={() => handleImageError(event.id)}
                     />
                     <div className="flex-1 space-y-4">
                       <div className="flex justify-between items-start">

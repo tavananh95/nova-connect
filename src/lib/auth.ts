@@ -1,6 +1,7 @@
 import axios from "axios";
 import { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { requireApiBaseUrl } from "@/lib/api-base-url";
 
 export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -13,8 +14,10 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials) {
         try {
+          const apiBaseUrl = requireApiBaseUrl();
+
           const loginResponse = await axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/login`,
+            `${apiBaseUrl}/api/v1/auth/login`,
             credentials
           );
           const token = loginResponse.data.token;
@@ -25,7 +28,7 @@ export const authOptions: AuthOptions = {
           }
 
           const userResponse = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/v1/me`,
+            `${apiBaseUrl}/api/v1/me`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

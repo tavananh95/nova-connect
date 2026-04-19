@@ -14,6 +14,7 @@ export default function CommentDialog({ postId, open, onClose }: Props) {
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState("")
   const [loading, setLoading] = useState(false)
+  const [avatarRefreshAttempted, setAvatarRefreshAttempted] = useState<Record<number, boolean>>({})
 
   const fetchComments = async () => {
     if (!token) return
@@ -62,6 +63,13 @@ export default function CommentDialog({ postId, open, onClose }: Props) {
     if (open) fetchComments()
   }, [open])
 
+  const handleAvatarError = (userId?: number) => {
+    if (!userId) return
+    if (avatarRefreshAttempted[userId]) return
+    setAvatarRefreshAttempted((prev) => ({ ...prev, [userId]: true }))
+    fetchComments()
+  }
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
@@ -74,7 +82,10 @@ export default function CommentDialog({ postId, open, onClose }: Props) {
             <div key={comment.id} className="flex items-start justify-between gap-3">
               <div className="flex gap-3">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={comment.user?.avatar || comment.user?.username?.[0]?.toUpperCase() } />
+                  <AvatarImage
+                    src={comment.user?.avatar || comment.user?.username?.[0]?.toUpperCase()}
+                    onError={() => handleAvatarError(comment.user?.id)}
+                  />
                   <AvatarFallback className="text-xs font-bold text-white bg-gradient-to-br from-blue-500 to-purple-600 border border-white/20">
                     {comment.user?.username?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
