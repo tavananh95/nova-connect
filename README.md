@@ -1,4 +1,6 @@
 # Nova Connect
+<img width="1193" height="812" alt="image" src="https://github.com/user-attachments/assets/08793aa9-0c47-4b49-acbe-d6050e751a21" />
+
 # Déploiement Frontend (Next.js) sur AWS Amplify
 
 ## 1. Flux global frontend
